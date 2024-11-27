@@ -107,31 +107,31 @@ void Node::MoveRecieverWindow(Frame *frame) {
     EV << "Start move rec window" << std::endl;
     if (payloadList[startIndex].second == false) {
         return;
-    }
-    while (payloadList[startIndex].second == true) {
-        networkLayer.ToNetworkLayer(payloadList[startIndex].first.first,
-                payloadList[startIndex].first.second);
-        payloadList[startIndex].second = false;
-        IncrementWindowIndex(startIndex);
-        IncrementWindowIndex(endIndex);
-        IncrementSeqNum(seqNumber);
-    }
+    } else {
+        while (payloadList[startIndex].second == true) {
+            networkLayer.ToNetworkLayer(payloadList[startIndex].first.first,
+                    payloadList[startIndex].first.second);
+            payloadList[startIndex].second = false;
+            IncrementWindowIndex(startIndex);
+            IncrementWindowIndex(endIndex);
+            IncrementSeqNum(seqNumber);
+        }
 
-    Frame *frame_cp = frame->dup();
+        frame->setFrameType(1);
+        frame->setACKNACKNumber(seqNumber);
+        std::string NodeName = getFullName();
 
-    frame_cp->setFrameType(1);
-    frame_cp->setACKNACKNumber(seqNumber);
-    std::string NodeName = getFullName();
+        srand(time(0));
+        double randomNum = static_cast<double>(rand()) / RAND_MAX;
 
-    srand(time(0));
-    double randomNum = static_cast<double>(rand()) / RAND_MAX;
+        EV << "At time[" << simTime().dbl() + PT << "], Node["
+                  << NodeName.back() << "] Sending [ACK] with number ["
+                  << seqNumber << "], loss[" << (randomNum >= LP ? "No" : "Yes")
+                  << "] " << std::endl;
 
-    EV << "At time[" << simTime().dbl() + PT << "], Node[" << NodeName.back()
-              << "] Sending [ACK] with number [" << seqNumber << "], loss["
-              << (randomNum >= LP ? "No" : "Yes") << "] " << std::endl;
-
-    if (randomNum > LP) {
-        sendDelayed(frame_cp, TD + PT, "out");
+        if (randomNum > LP) {
+            sendDelayed(frame, TD + PT, "out");
+        }
     }
     EV << "End move rec window" << std::endl;
 }
@@ -273,7 +273,7 @@ void Node::handleTimeout(Frame *frame) {
 }
 
 void Node::handleMessage(cMessage *msg) {
-    EV<<"IN"<<std::endl;
+    EV << "IN" << std::endl;
     Frame *frame = dynamic_cast<Frame*>(msg);
 
     if (msg->isSelfMessage()) {
