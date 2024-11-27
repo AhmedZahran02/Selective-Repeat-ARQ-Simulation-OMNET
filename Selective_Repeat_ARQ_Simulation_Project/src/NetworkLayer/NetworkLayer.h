@@ -5,6 +5,7 @@
 
 #include <omnetpp.h>
 #include "../Utils/FileIO.h"
+#include "../Utils/Logger.h"
 
 using namespace omnetpp;
 

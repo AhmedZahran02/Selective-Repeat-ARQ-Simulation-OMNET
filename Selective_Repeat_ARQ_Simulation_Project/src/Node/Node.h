@@ -8,6 +8,7 @@
 #include "../Utils/Framming.h"
 #include "../Errors/ErrorSimulation.h"
 #include "../Utils/General.h"
+#include "../Utils/Logger.h"
 #include "../Frame/Frame_m.h"
 #include "../NetworkLayer/NetworkLayer.h"
 #include <utility>
