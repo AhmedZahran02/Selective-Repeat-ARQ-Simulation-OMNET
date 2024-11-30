@@ -36,6 +36,8 @@ private:
     std::vector<double> timeouts;
     std::vector<std::pair<std::pair<std::string,int>,bool>> payloadList;
 
+    std::vector<std::vector<bool>> errors;
+
     NetworkLayer networkLayer;
   protected:
     void reFillTheWindow();
@@ -46,6 +48,7 @@ private:
     void handleACK(Frame* frame);
     void handleNACK(Frame* frame);
     void handleTimeout(Frame* frame);
+    void sendFrame(Frame *frame);
 
     void IncrementSeqNum(int& seqNum);
     void IncrementWindowIndex(int &index);
