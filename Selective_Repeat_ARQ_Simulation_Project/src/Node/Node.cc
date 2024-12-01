@@ -224,6 +224,8 @@ void Node::handleNACK(Frame *frame) {
     frame = SeqList[index]->dup();
 
     frame->setFrameType(7);
+    isInNACK = true;
+    NACKEnding = simTime().dbl() + PT;
     scheduleAt(simTime().dbl() + PT, frame);
 
     timeouts[index] = simTime().dbl() + PT + TO;
@@ -232,6 +234,7 @@ void Node::handleNACK(Frame *frame) {
 }
 
 void Node::sendNACKData(Frame *frame) {
+    isInNACK = false;
     frame->setFrameType(2);
 
     Frame *noErrorFrame = frame->dup();
@@ -332,6 +335,10 @@ void Node::sendFrame(Frame *frame) {
     if (isInTimeout) {
         scheduleAt(TimeoutEnding + PT, frame);
         return;
+    }
+    if (isInNACK) {
+            scheduleAt(NACKEnding + PT, frame);
+            return;
     }
     processing = false;
     EV << "Start Sending DATA" << std::endl;
