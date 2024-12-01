@@ -26,11 +26,11 @@ At time[20.501], Node[1] [sent] frame with seq_num=[6] and payload=[$[a] The vio
 Timeout event at [22] at Node[1] for frame with seq_num=[3]
 At time[22.001], Node[0] Sending [NACK] with number [3], loss[No] 
 At time[22.5], Node[1] sent frame with seq_num=[3] and payload=[$Most violins have a hollow wooden body.$] and trailer=[10111011] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
-At time[23.501], Node[1] sent frame with seq_num=[3] and payload=[$Most violins have a hollow wooden body.$] and trailer=[10111011] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 Uploading payload=[Most violins have a hollow wooden body.] and seq_num=[3] to the network layer
 Uploading payload=[It is the smallest and thus highest-pitched instrument] and seq_num=[4] to the network layer
 Uploading payload=[(soprano) in the family in regular use.] and seq_num=[5] to the network layer
 Uploading payload=[[a] The violin typically has four strings,] and seq_num=[6] to the network layer
+At time[23.501], Node[1] sent frame with seq_num=[3] and payload=[$Most violins have a hollow wooden body.$] and trailer=[10111011] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 Timeout event at [24] at Node[1] for frame with seq_num=[4]
 At time[24.001], Node[0] Sending [ACK] with number [7], loss[No] 
 Timeout event at [24.5] at Node[1] for frame with seq_num=[5]
@@ -52,27 +52,27 @@ At time [29.001], Node[1] , Introducing channel error with code =[0000] .
 At time[29.001], Node[0] Sending [NACK] with number [1], loss[No] 
 At time[29.501], Node[1] [sent] frame with seq_num=[3] and payload=[$It can also be played by plucking$] and trailer=[11101111] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time [29.501], Node[1] , Introducing channel error with code =[1001] .
+At time[30.001], Node[1] [sent] frame with seq_num=[4] and payload=[$the strings/$ with the fi~gers (pizzicato)$] and trailer=[10100111] , Modified [212] , Lost [No], Duplicate [0], Delay [4]
 At time[30.501], Node[1] sent frame with seq_num=[1] and payload=[$and is most commonly played by drawing$] and trailer=[11100100] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
-At time[30.001], Node[1] [sent] frame with seq_num=[4] and payload=[$the strings/¤ with the fingers (pizzicato)$] and trailer=[10100111] , Modified [111] , Lost [No], Duplicate [0], Delay [4]
 At time[31.001], Node[0] Sending [NACK] with number [1], loss[No] 
 Uploading payload=[and is most commonly played by drawing] and seq_num=[1] to the network layer
 Uploading payload=[a bow across its strings.] and seq_num=[2] to the network layer
 Uploading payload=[It can also be played by plucking] and seq_num=[3] to the network layer
-At time[32.501], Node[1] sent frame with seq_num=[1] and payload=[$and is most commonly played by drawing$] and trailer=[11100100] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time[32.002], Node[0] Sending [ACK] with number [4], loss[No] 
+At time[32.501], Node[1] sent frame with seq_num=[1] and payload=[$and is most commonly played by drawing$] and trailer=[11100100] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time [33.502], Node[1] , Introducing channel error with code =[0000] .
 At time[34.002], Node[1] [sent] frame with seq_num=[5] and payload=[$and, in specialized cases, by striking$] and trailer=[01110011] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time [34.002], Node[1] , Introducing channel error with code =[0010] .
 At time[34.502], Node[1] [sent] frame with seq_num=[6] and payload=[$the strings with the wooden side/$ of the bow$] and trailer=[10111101] , Modified [-1] , Lost [No], Duplicate [1], Delay [0]
 At time[34.602], Node[1] sent frame with seq_num=[6] and payload=[$the strings with the wooden side/$ of the bow$] and trailer=[10111101] , Modified [-1] , Lost [No], Duplicate [2], Delay [0]
 At time [34.502], Node[1] , Introducing channel error with code =[0000] .
-At time[35.002], Node[1] [sent] frame with seq_num=[7] and payload=[$(col legno).$] and trailer=[0110100111101010] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
-At time[35.501], Node[0] sent frame with seq_num=[4] and payload=[$the strings/¤ with the fingers (pizzicato)$] and trailer=[10100111] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
+At time[35.002], Node[1] [sent] frame with seq_num=[7] and payload=[$(col legno).$] and trailer=[0110100111001001] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
+At time[35.501], Node[0] sent frame with seq_num=[4] and payload=[$the strings/$ with the fi~gers (pizzicato)$] and trailer=[10100111] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time[35.502], Node[0] Sending [NACK] with number [4], loss[No] 
 At time[36.002], Node[0] Sending [NACK] with number [4], loss[No] 
 At time[36.102], Node[0] Sending [NACK] with number [4], loss[No] 
-At time[37.002], Node[1] sent frame with seq_num=[4] and payload=[$the strings/$ with the fingers (pizzicato)$] and trailer=[10100111] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time[36.502], Node[0] Sending [NACK] with number [4], loss[No] 
+At time[37.002], Node[1] sent frame with seq_num=[4] and payload=[$the strings/$ with the fingers (pizzicato)$] and trailer=[10100111] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time[37.502], Node[1] sent frame with seq_num=[4] and payload=[$the strings/$ with the fingers (pizzicato)$] and trailer=[10100111] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time[37.602], Node[1] sent frame with seq_num=[4] and payload=[$the strings/$ with the fingers (pizzicato)$] and trailer=[10100111] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
 At time[38.002], Node[1] sent frame with seq_num=[4] and payload=[$the strings/$ with the fingers (pizzicato)$] and trailer=[10100111] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]

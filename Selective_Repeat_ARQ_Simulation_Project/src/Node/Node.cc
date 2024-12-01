@@ -223,14 +223,24 @@ void Node::handleNACK(Frame *frame) {
 
     frame = SeqList[index]->dup();
 
-    sendDelayed(frame, PT + TD + 0.001, "out");
+    frame->setFrameType(7);
+    scheduleAt(simTime().dbl() + PT, frame);
 
-    Frame *noErrorFrame = frame->dup();
-    scheduleAt(simTime().dbl() + PT + TO, noErrorFrame);
     timeouts[index] = simTime().dbl() + PT + TO;
 
+    EV << "End NACK" << std::endl;
+}
+
+void Node::sendNACKData(Frame *frame) {
+    frame->setFrameType(2);
+
+    Frame *noErrorFrame = frame->dup();
+    scheduleAt(simTime().dbl() + TO, noErrorFrame);
+
+    sendDelayed(frame, TD + 0.001, "out");
+
     std::string NodeName = getFullName();
-    EV << "At time[" << simTime().dbl() + PT << "], Node[" << NodeName.back()
+    EV << "At time[" << simTime().dbl() << "], Node[" << NodeName.back()
               << "] sent frame with seq_num=[" << noErrorFrame->getSeqNum()
               << "] and payload=[" << frame->getPayload() << "]"
               << " and trailer=[" << toBinary(frame->getTrailer()) << "]"
@@ -240,7 +250,7 @@ void Node::handleNACK(Frame *frame) {
     Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
     std::fstream &fout = logger.GetFileStream();
     if (fout.is_open()) {
-        fout << "At time[" << simTime().dbl() + PT << "], Node["
+        fout << "At time[" << simTime().dbl() << "], Node["
                 << NodeName.back() << "] sent frame with seq_num=["
                 << noErrorFrame->getSeqNum() << "] and payload=["
                 << frame->getPayload() << "]" << " and trailer=["
@@ -248,8 +258,6 @@ void Node::handleNACK(Frame *frame) {
                 << "]" << " , Lost [" << "No" << "]" << ", Duplicate [" << 0
                 << "], Delay [" << 0 << "]" << endl;
     }
-
-    EV << "End NACK" << std::endl;
 }
 
 void Node::handleTimeout(Frame *frame) {
@@ -321,7 +329,7 @@ void Node::sendTimeout(Frame *frame) {
 }
 
 void Node::sendFrame(Frame *frame) {
-    if (isInTimeout){
+    if (isInTimeout) {
         scheduleAt(TimeoutEnding + PT, frame);
         return;
     }
@@ -436,6 +444,8 @@ void Node::handleMessage(cMessage *msg) {
     case 6:
         sendTimeout(frame);
         break;
+    case 7:
+        sendNACKData(frame);
     default:
         reFillTheWindow();
         break;
