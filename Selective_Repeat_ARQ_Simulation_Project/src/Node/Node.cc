@@ -14,6 +14,10 @@ void Node::parametersInitialization() {
     DD = par("DD").doubleValue();
     LP = par("LP").doubleValue();
 
+    processing = false;
+    isInTimeout = false;
+    isInNACK = false;
+
     seqNumber = 0;
     startIndex = 0;
     endIndex = (MAX_SEQ + 1) / 2 - 1;
@@ -43,7 +47,7 @@ void Node::IncrementWindowIndex(int &index) {
 
 void Node::reFillTheWindow() {
     EV << "Start refill sender window" << std::endl;
-    if (currentWindowSize < WindowSize) {
+    if (!processing && currentWindowSize < WindowSize) {
         PacketInfo *packet = networkLayer.FromNetworkLayer();
         if (packet != nullptr) {
             std::string NodeName = getFullName();
@@ -79,6 +83,7 @@ void Node::reFillTheWindow() {
             errors[seqNumber][2] = packet->delay;
             errors[seqNumber][3] = packet->duplication;
 
+            processing = true;
             scheduleAt(simTime().dbl() + PT, frame);
 
             currentWindowSize++;
@@ -277,6 +282,8 @@ void Node::handleTimeout(Frame *frame) {
                     << NodeName.back() << "] for frame with seq_num=["
                     << frame->getSeqNum() << "]" << endl;
         }
+        isInTimeout = true;
+        TimeoutEnding = simTime().dbl() + PT;
         scheduleAt(simTime().dbl() + PT, frame);
         timeouts[index] = simTime().dbl() + PT + TO;
     }
@@ -284,6 +291,7 @@ void Node::handleTimeout(Frame *frame) {
 }
 
 void Node::sendTimeout(Frame *frame) {
+    isInTimeout = false;
     frame->setFrameType(2);
 
     sendDelayed(frame, TD + 0.001, "out");
@@ -303,17 +311,21 @@ void Node::sendTimeout(Frame *frame) {
     Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
     std::fstream &fout = logger.GetFileStream();
     if (fout.is_open()) {
-        fout << "At time[" << simTime().dbl() << "], Node["
-                << NodeName.back() << "] sent frame with seq_num=["
-                << frame->getSeqNum() << "] and payload=["
-                << frame->getPayload() << "]" << " and trailer=["
-                << toBinary(frame->getTrailer()) << "]" << " , Modified [" << -1
-                << "]" << " , Lost [" << "No" << "]" << ", Duplicate [" << 0
-                << "], Delay [" << 0 << "]" << endl;
+        fout << "At time[" << simTime().dbl() << "], Node[" << NodeName.back()
+                << "] sent frame with seq_num=[" << frame->getSeqNum()
+                << "] and payload=[" << frame->getPayload() << "]"
+                << " and trailer=[" << toBinary(frame->getTrailer()) << "]"
+                << " , Modified [" << -1 << "]" << " , Lost [" << "No" << "]"
+                << ", Duplicate [" << 0 << "], Delay [" << 0 << "]" << endl;
     }
 }
 
 void Node::sendFrame(Frame *frame) {
+    if (isInTimeout){
+        scheduleAt(TimeoutEnding + PT, frame);
+        return;
+    }
+    processing = false;
     EV << "Start Sending DATA" << std::endl;
     frame->setFrameType(2);
     Frame *noErrorFrame = frame->dup();

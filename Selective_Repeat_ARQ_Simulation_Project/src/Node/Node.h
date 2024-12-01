@@ -27,6 +27,14 @@ private:
     double DD;
     double LP;
 
+    bool processing;
+
+    bool isInTimeout;
+    double TimeoutEnding;
+
+    bool isInNACK;
+    double NACKEnding;
+
     int seqNumber;
 
     int startIndex;
