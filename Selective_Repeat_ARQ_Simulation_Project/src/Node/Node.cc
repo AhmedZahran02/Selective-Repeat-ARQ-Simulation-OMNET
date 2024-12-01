@@ -22,7 +22,7 @@ void Node::parametersInitialization() {
     timeouts.resize(WindowSize);
     payloadList.resize(WindowSize);
     errors.resize(MAX_SEQ + 1);
-    for(int i=0;i <= MAX_SEQ;i++){
+    for (int i = 0; i <= MAX_SEQ; i++) {
         errors[i].resize(4);
     }
 }
@@ -74,10 +74,10 @@ void Node::reFillTheWindow() {
 
             frame->setFrameType(3); // send to myself
 
-            errors[seqNumber][0]= packet->loss;
-            errors[seqNumber][1]= packet->modification;
-            errors[seqNumber][2]= packet->delay;
-            errors[seqNumber][3]= packet->duplication;
+            errors[seqNumber][0] = packet->loss;
+            errors[seqNumber][1] = packet->modification;
+            errors[seqNumber][2] = packet->delay;
+            errors[seqNumber][3] = packet->duplication;
 
             scheduleAt(simTime().dbl() + PT, frame);
 
@@ -143,41 +143,38 @@ void Node::handleRecieveData(Frame *frame) {
     EV << "End Handle rec" << std::endl;
 }
 
-void Node::sendACKNACK(Frame *frame){
+void Node::sendACKNACK(Frame *frame) {
     EV << "Start Sending ACKNACK" << std::endl;
     frame->setFrameType(frame->getFrameType() - 4);
     std::string NodeName = getFullName();
     srand(time(0));
     double randomNum = static_cast<double>(rand()) / RAND_MAX;
 
-    if(frame->getFrameType() == 0) //NACK
-    {
-        EV << "At time[" << simTime().dbl() << "], Node["
-                  << NodeName.back() << "] Sending [NACK] with number ["
+    if (frame->getFrameType() == 0) //NACK
+            {
+        EV << "At time[" << simTime().dbl() << "], Node[" << NodeName.back()
+                  << "] Sending [NACK] with number ["
                   << frame->getACKNACKNumber() << "], loss["
-                  << (randomNum >= LP ? "No" : "Yes") << "] "
-                  << std::endl;
+                  << (randomNum >= LP ? "No" : "Yes") << "] " << std::endl;
 
         Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
         std::fstream &fout = logger.GetFileStream();
         if (fout.is_open()) {
             fout << "At time[" << simTime().dbl() << "], Node["
-                    << NodeName.back()
-                    << "] Sending [NACK] with number [" << frame->getACKNACKNumber()
-                    << "], loss[" << (randomNum >= LP ? "No" : "Yes")
-                    << "] " << std::endl;
+                    << NodeName.back() << "] Sending [NACK] with number ["
+                    << frame->getACKNACKNumber() << "], loss["
+                    << (randomNum >= LP ? "No" : "Yes") << "] " << std::endl;
         }
 
         if (randomNum > LP) {
-            sendDelayed(frame, TD , "out");
+            sendDelayed(frame, TD, "out");
         }
-    }
-    else //ACK
+    } else //ACK
     {
-        EV << "At time[" << simTime().dbl() << "], Node["
-                  << NodeName.back() << "] Sending [ACK] with number ["
-                  << frame->getACKNACKNumber() << "], loss[" << (randomNum >= LP ? "No" : "Yes")
-                  << "] " << std::endl;
+        EV << "At time[" << simTime().dbl() << "], Node[" << NodeName.back()
+                  << "] Sending [ACK] with number ["
+                  << frame->getACKNACKNumber() << "], loss["
+                  << (randomNum >= LP ? "No" : "Yes") << "] " << std::endl;
 
         Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
         std::fstream &fout = logger.GetFileStream();
@@ -252,7 +249,6 @@ void Node::handleNACK(Frame *frame) {
 
 void Node::handleTimeout(Frame *frame) {
     EV << "Start Timeout" << std::endl;
-    int seqNum = frame->getSeqNum();
 
     if (WindowSize == 0) {
         return;
@@ -261,7 +257,7 @@ void Node::handleTimeout(Frame *frame) {
     int index = 0;
     bool inWindow = false;
     for (auto f : SeqList) {
-        if (f->getSeqNum() == seqNum) {
+        if (f && f->getSeqNum() == frame->getSeqNum()) {
             inWindow = true;
             break;
         }
@@ -269,40 +265,52 @@ void Node::handleTimeout(Frame *frame) {
     }
 
     if (inWindow && (simTime() == timeouts[index])) {
-        sendDelayed(frame, PT + TD + 0.001, "out");
-
-        Frame *noErrorFrame = frame->dup();
-        scheduleAt(simTime().dbl() + PT + TO, noErrorFrame);
-        timeouts[index] = simTime().dbl() + PT + TO;
-
+        frame->setFrameType(6); // timeout
         std::string NodeName = getFullName();
         EV << "Timeout event at [" << simTime().dbl() << "] at Node["
-                  << NodeName.back() << "] for frame with seq_num=[" << seqNum
-                  << "]" << endl;
-        EV << "At time[" << simTime().dbl() + PT << "], Node["
-                  << NodeName.back() << "] sent frame with seq_num=[" << seqNum
-                  << "] and payload=[" << frame->getPayload() << "]"
-                  << " and trailer=[" << toBinary(frame->getTrailer()) << "]"
-                  << " , Modified [" << -1 << "]" << " , Lost [" << "No" << "]"
-                  << ", Duplicate [" << 0 << "], Delay [" << 0 << "]" << endl;
-
+                  << NodeName.back() << "] for frame with seq_num=["
+                  << frame->getSeqNum() << "]" << endl;
         Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
         std::fstream &fout = logger.GetFileStream();
         if (fout.is_open()) {
             fout << "Timeout event at [" << simTime().dbl() << "] at Node["
-                    << NodeName.back() << "] for frame with seq_num=[" << seqNum
-                    << "]" << endl;
-            fout << "At time[" << simTime().dbl() + PT << "], Node["
-                    << NodeName.back() << "] sent frame with seq_num=["
-                    << seqNum << "] and payload=[" << frame->getPayload() << "]"
-                    << " and trailer=[" << toBinary(frame->getTrailer()) << "]"
-                    << " , Modified [" << -1 << "]" << " , Lost [" << "No"
-                    << "]" << ", Duplicate [" << 0 << "], Delay [" << 0 << "]"
-                    << endl;
+                    << NodeName.back() << "] for frame with seq_num=["
+                    << frame->getSeqNum() << "]" << endl;
         }
-
+        scheduleAt(simTime().dbl() + PT, frame);
+        timeouts[index] = simTime().dbl() + PT + TO;
     }
     EV << "End Timeout" << std::endl;
+}
+
+void Node::sendTimeout(Frame *frame) {
+    frame->setFrameType(2);
+
+    sendDelayed(frame, TD + 0.001, "out");
+
+    Frame *noErrorFrame = frame->dup();
+    scheduleAt(simTime().dbl() + TO, noErrorFrame);
+
+    std::string NodeName = getFullName();
+
+    EV << "At time[" << simTime().dbl() << "], Node[" << NodeName.back()
+              << "] sent frame with seq_num=[" << frame->getSeqNum()
+              << "] and payload=[" << frame->getPayload() << "]"
+              << " and trailer=[" << toBinary(frame->getTrailer()) << "]"
+              << " , Modified [" << -1 << "]" << " , Lost [" << "No" << "]"
+              << ", Duplicate [" << 0 << "], Delay [" << 0 << "]" << endl;
+
+    Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
+    std::fstream &fout = logger.GetFileStream();
+    if (fout.is_open()) {
+        fout << "At time[" << simTime().dbl() << "], Node["
+                << NodeName.back() << "] sent frame with seq_num=["
+                << frame->getSeqNum() << "] and payload=["
+                << frame->getPayload() << "]" << " and trailer=["
+                << toBinary(frame->getTrailer()) << "]" << " , Modified [" << -1
+                << "]" << " , Lost [" << "No" << "]" << ", Duplicate [" << 0
+                << "], Delay [" << 0 << "]" << endl;
+    }
 }
 
 void Node::sendFrame(Frame *frame) {
@@ -347,8 +355,8 @@ void Node::sendFrame(Frame *frame) {
         if (duplication) {
             EV << "At time[" << simTime().dbl() + DD << "], Node["
                       << NodeName.back() << "] sent frame with seq_num=["
-                      << frame->getSeqNum() << "] and payload=[" << frame->getPayload()
-                      << "]" << " and trailer=["
+                      << frame->getSeqNum() << "] and payload=["
+                      << frame->getPayload() << "]" << " and trailer=["
                       << toBinary(frame->getTrailer()) << "]" << " , Modified ["
                       << results[0] << "]" << " , Lost [" << results[1] << "]"
                       << ", Duplicate [" << (int) (results[2][0] - '0') + 1
@@ -359,8 +367,8 @@ void Node::sendFrame(Frame *frame) {
             if (fout.is_open()) {
                 fout << "At time[" << simTime().dbl() + DD << "], Node["
                         << NodeName.back() << "] sent frame with seq_num=["
-                        << frame->getSeqNum() << "] and payload=[" << frame->getPayload()
-                        << "]" << " and trailer=["
+                        << frame->getSeqNum() << "] and payload=["
+                        << frame->getPayload() << "]" << " and trailer=["
                         << toBinary(frame->getTrailer()) << "]"
                         << " , Modified [" << results[0] << "]" << " , Lost ["
                         << results[1] << "]" << ", Duplicate ["
@@ -412,6 +420,9 @@ void Node::handleMessage(cMessage *msg) {
         break;
     case 5:
         sendACKNACK(frame);
+        break;
+    case 6:
+        sendTimeout(frame);
         break;
     default:
         reFillTheWindow();

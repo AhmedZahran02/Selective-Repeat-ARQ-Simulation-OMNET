@@ -50,6 +50,7 @@ private:
     void handleNACK(Frame* frame);
     void handleTimeout(Frame* frame);
     void sendFrame(Frame *frame);
+    void sendTimeout(Frame *frame);
 
     void IncrementSeqNum(int& seqNum);
     void IncrementWindowIndex(int &index);
