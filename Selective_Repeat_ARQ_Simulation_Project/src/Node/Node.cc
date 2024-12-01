@@ -104,28 +104,10 @@ void Node::MoveRecieverWindow(Frame *frame) {
 
         frame->setFrameType(1);
         frame->setACKNACKNumber(seqNumber);
-        std::string NodeName = getFullName();
 
-        srand(time(0));
-        double randomNum = static_cast<double>(rand()) / RAND_MAX;
-
-        EV << "At time[" << simTime().dbl() + PT << "], Node["
-                  << NodeName.back() << "] Sending [ACK] with number ["
-                  << seqNumber << "], loss[" << (randomNum >= LP ? "No" : "Yes")
-                  << "] " << std::endl;
-
-        Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
-        std::fstream &fout = logger.GetFileStream();
-        if (fout.is_open()) {
-            fout << "At time[" << simTime().dbl() + PT << "], Node["
-                    << NodeName.back() << "] Sending [ACK] with number ["
-                    << seqNumber << "], loss["
-                    << (randomNum >= LP ? "No" : "Yes") << "] " << std::endl;
-        }
-
-        if (randomNum > LP) {
-            sendDelayed(frame, TD + PT, "out");
-        }
+        // ACK
+        frame->setFrameType(frame->getFrameType() + 4);
+        scheduleAt(simTime().dbl() + PT, frame);
     }
     EV << "End move rec window" << std::endl;
 }
@@ -145,64 +127,72 @@ void Node::handleRecieveData(Frame *frame) {
             if (frame->getSeqNum() != seqNumber) {
                 frame->setFrameType(0);
                 frame->setACKNACKNumber(seqNumber);
-                std::string NodeName = getFullName();
-
-                srand(time(0));
-                double randomNum = static_cast<double>(rand()) / RAND_MAX;
-
-                EV << "At time[" << simTime().dbl() + PT << "], Node["
-                          << NodeName.back() << "] Sending [NACK] with number ["
-                          << seqNumber << "], loss["
-                          << (randomNum >= LP ? "No" : "Yes") << "] "
-                          << std::endl;
-
-                Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
-                std::fstream &fout = logger.GetFileStream();
-                if (fout.is_open()) {
-                    fout << "At time[" << simTime().dbl() + PT << "], Node["
-                            << NodeName.back()
-                            << "] Sending [NACK] with number [" << seqNumber
-                            << "], loss[" << (randomNum >= LP ? "No" : "Yes")
-                            << "] " << std::endl;
-                }
-
-                if (randomNum > LP) {
-                    sendDelayed(frame, TD + PT, "out");
-                }
+                // NACK
+                frame->setFrameType(frame->getFrameType() + 4);
+                scheduleAt(simTime().dbl() + PT, frame);
             }
             MoveRecieverWindow(frame);
         } else {
             if (frame->getSeqNum() == seqNumber) {
-                frame->setFrameType(0);
-                frame->setACKNACKNumber(seqNumber);
-                std::string NodeName = getFullName();
-
-                srand(time(0));
-                double randomNum = static_cast<double>(rand()) / RAND_MAX;
-
-                EV << "At time[" << simTime().dbl() + PT << "], Node["
-                          << NodeName.back() << "] Sending [NACK] with number ["
-                          << seqNumber << "], loss["
-                          << (randomNum >= LP ? "No" : "Yes") << "] "
-                          << std::endl;
-
-                Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
-                std::fstream &fout = logger.GetFileStream();
-                if (fout.is_open()) {
-                    fout << "At time[" << simTime().dbl() + PT << "], Node["
-                            << NodeName.back()
-                            << "] Sending [NACK] with number [" << seqNumber
-                            << "], loss[" << (randomNum >= LP ? "No" : "Yes")
-                            << "] " << std::endl;
-                }
-
-                if (randomNum >= LP) {
-                    sendDelayed(frame, TD + PT, "out");
-                }
+                // NACK
+                frame->setFrameType(frame->getFrameType() + 4);
+                scheduleAt(simTime().dbl() + PT, frame);
             }
         }
     }
     EV << "End Handle rec" << std::endl;
+}
+
+void Node::sendACKNACK(Frame *frame){
+    EV << "Start Sending ACKNACK" << std::endl;
+    frame->setFrameType(frame->getFrameType() - 4);
+    std::string NodeName = getFullName();
+    srand(time(0));
+    double randomNum = static_cast<double>(rand()) / RAND_MAX;
+
+    if(frame->getFrameType() == 0) //NACK
+    {
+        EV << "At time[" << simTime().dbl() << "], Node["
+                  << NodeName.back() << "] Sending [NACK] with number ["
+                  << frame->getACKNACKNumber() << "], loss["
+                  << (randomNum >= LP ? "No" : "Yes") << "] "
+                  << std::endl;
+
+        Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
+        std::fstream &fout = logger.GetFileStream();
+        if (fout.is_open()) {
+            fout << "At time[" << simTime().dbl() << "], Node["
+                    << NodeName.back()
+                    << "] Sending [NACK] with number [" << frame->getACKNACKNumber()
+                    << "], loss[" << (randomNum >= LP ? "No" : "Yes")
+                    << "] " << std::endl;
+        }
+
+        if (randomNum > LP) {
+            sendDelayed(frame, TD , "out");
+        }
+    }
+    else //ACK
+    {
+        EV << "At time[" << simTime().dbl() << "], Node["
+                  << NodeName.back() << "] Sending [ACK] with number ["
+                  << frame->getACKNACKNumber() << "], loss[" << (randomNum >= LP ? "No" : "Yes")
+                  << "] " << std::endl;
+
+        Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
+        std::fstream &fout = logger.GetFileStream();
+        if (fout.is_open()) {
+            fout << "At time[" << simTime().dbl() << "], Node["
+                    << NodeName.back() << "] Sending [ACK] with number ["
+                    << frame->getACKNACKNumber() << "], loss["
+                    << (randomNum >= LP ? "No" : "Yes") << "] " << std::endl;
+        }
+
+        if (randomNum > LP) {
+            sendDelayed(frame, TD + PT, "out");
+        }
+    }
+    EV << "End Sending ACKNACK" << std::endl;
 }
 
 void Node::handleACK(Frame *frame) {
@@ -316,7 +306,7 @@ void Node::handleTimeout(Frame *frame) {
 }
 
 void Node::sendFrame(Frame *frame) {
-    EV << "Start Sending" << std::endl;
+    EV << "Start Sending DATA" << std::endl;
     frame->setFrameType(2);
     Frame *noErrorFrame = frame->dup();
     SeqList[endIndex] = noErrorFrame;
@@ -387,13 +377,13 @@ void Node::sendFrame(Frame *frame) {
     timeouts[endIndex] = simTime().dbl() + TO;
     IncrementWindowIndex(endIndex);
     reFillTheWindow();
-    EV << "End Sending" << std::endl;
+    EV << "End Sending DATA" << std::endl;
 }
 
 void Node::handleMessage(cMessage *msg) {
     Frame *frame = dynamic_cast<Frame*>(msg);
 
-    if (msg->isSelfMessage() && frame->getFrameType() != 3) {
+    if (msg->isSelfMessage() && frame->getFrameType() == 2) {
         handleTimeout(frame);
         return;
     }
@@ -416,6 +406,12 @@ void Node::handleMessage(cMessage *msg) {
         break;
     case 3:
         sendFrame(frame);
+        break;
+    case 4:
+        sendACKNACK(frame);
+        break;
+    case 5:
+        sendACKNACK(frame);
         break;
     default:
         reFillTheWindow();

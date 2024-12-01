@@ -45,6 +45,7 @@ private:
 
 
     void handleRecieveData(Frame* frame);
+    void sendACKNACK(Frame *frame);
     void handleACK(Frame* frame);
     void handleNACK(Frame* frame);
     void handleTimeout(Frame* frame);
