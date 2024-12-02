@@ -377,32 +377,34 @@ void Node::sendFrame(Frame *frame) {
                 << "], Delay [" << (delay ? ED : 0) << "]" << endl;
     }
 
+    if (duplication) {
+        EV << "At time[" << simTime().dbl() + DD << "], Node["
+                  << NodeName.back() << "] sent frame with seq_num=["
+                  << frame->getSeqNum() << "] and payload=["
+                  << frame->getPayload() << "]" << " and trailer=["
+                  << toBinary(frame->getTrailer()) << "]" << " , Modified ["
+                  << results[0] << "]" << " , Lost [" << results[1] << "]"
+                  << ", Duplicate [" << (int) (results[2][0] - '0') + 1
+                  << "], Delay [" << (delay ? ED : 0) << "]" << endl;
+
+        Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
+        std::fstream &fout = logger.GetFileStream();
+        if (fout.is_open()) {
+            fout << "At time[" << simTime().dbl() + DD << "], Node["
+                    << NodeName.back() << "] sent frame with seq_num=["
+                    << frame->getSeqNum() << "] and payload=["
+                    << frame->getPayload() << "]" << " and trailer=["
+                    << toBinary(frame->getTrailer()) << "]"
+                    << " , Modified [" << results[0] << "]" << " , Lost ["
+                    << results[1] << "]" << ", Duplicate ["
+                    << (int) (results[2][0] - '0') + 1 << "], Delay ["
+                    << (delay ? ED : 0) << "]" << endl;
+        }
+    }
+
     if (!loss) {
         sendDelayed(frame, TD + (delay ? ED : 0), "out");
-        if (duplication) {
-            EV << "At time[" << simTime().dbl() + DD << "], Node["
-                      << NodeName.back() << "] sent frame with seq_num=["
-                      << frame->getSeqNum() << "] and payload=["
-                      << frame->getPayload() << "]" << " and trailer=["
-                      << toBinary(frame->getTrailer()) << "]" << " , Modified ["
-                      << results[0] << "]" << " , Lost [" << results[1] << "]"
-                      << ", Duplicate [" << (int) (results[2][0] - '0') + 1
-                      << "], Delay [" << (delay ? ED : 0) << "]" << endl;
-
-            Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
-            std::fstream &fout = logger.GetFileStream();
-            if (fout.is_open()) {
-                fout << "At time[" << simTime().dbl() + DD << "], Node["
-                        << NodeName.back() << "] sent frame with seq_num=["
-                        << frame->getSeqNum() << "] and payload=["
-                        << frame->getPayload() << "]" << " and trailer=["
-                        << toBinary(frame->getTrailer()) << "]"
-                        << " , Modified [" << results[0] << "]" << " , Lost ["
-                        << results[1] << "]" << ", Duplicate ["
-                        << (int) (results[2][0] - '0') + 1 << "], Delay ["
-                        << (delay ? ED : 0) << "]" << endl;
-            }
-
+        if(duplication){
             Frame *duplicateFrame = frame->dup();
             sendDelayed(duplicateFrame, TD + DD + (delay ? ED : 0), "out");
         }

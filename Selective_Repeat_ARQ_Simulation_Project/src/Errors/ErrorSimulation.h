@@ -31,7 +31,6 @@ std::vector<std::string> ApplyError(Frame *frame, bool loss, bool modification,
 
     if (loss) {
         results[1] = "Yes";
-        return results;
     }
     if (modification) // Modification error
     {
