@@ -35,6 +35,8 @@ private:
     bool isInNACK;
     double NACKEnding;
 
+    bool no_nak;
+
     int seqNumber;
 
     int startIndex;

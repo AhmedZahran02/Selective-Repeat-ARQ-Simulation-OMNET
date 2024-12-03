@@ -18,6 +18,8 @@ void Node::parametersInitialization() {
     isInTimeout = false;
     isInNACK = false;
 
+    no_nak = false;
+
     seqNumber = 0;
     startIndex = 0;
     endIndex = (MAX_SEQ + 1) / 2 - 1;
@@ -98,6 +100,7 @@ void Node::MoveRecieverWindow(Frame *frame) {
     if (payloadList[startIndex].second == false) {
         return;
     } else {
+        no_nak = false;
         while (payloadList[startIndex].second == true) {
             networkLayer.ToNetworkLayer(payloadList[startIndex].first.first,
                     payloadList[startIndex].first.second);
@@ -130,18 +133,38 @@ void Node::handleRecieveData(Frame *frame) {
                     + ((frame->getSeqNum() - seqNumber + MAX_SEQ) % MAX_SEQ))
                     % WindowSize] = { { payload, frame->getSeqNum() }, true };
             if (frame->getSeqNum() != seqNumber) {
-                frame->setFrameType(0);
-                frame->setACKNACKNumber(seqNumber);
-                // NACK
-                frame->setFrameType(frame->getFrameType() + 4);
-                scheduleAt(simTime().dbl() + PT, frame);
+                if(!no_nak){
+                    no_nak = true;
+                    frame->setFrameType(0);
+                    frame->setACKNACKNumber(seqNumber);
+                    // NACK
+                    frame->setFrameType(frame->getFrameType() + 4);
+                    scheduleAt(simTime().dbl() + PT, frame);
+                }else{
+                    // ACK
+                    frame->setFrameType(1);
+                    frame->setACKNACKNumber(seqNumber);
+                    frame->setFrameType(frame->getFrameType() + 4);
+                    scheduleAt(simTime().dbl() + PT, frame);
+                }
             }
             MoveRecieverWindow(frame);
         } else {
             if (frame->getSeqNum() == seqNumber) {
-                // NACK
-                frame->setFrameType(frame->getFrameType() + 4);
-                scheduleAt(simTime().dbl() + PT, frame);
+                if (!no_nak) {
+                    no_nak = true;
+                    // NACK
+                    frame->setFrameType(0);
+                    frame->setFrameType(frame->getFrameType() + 4);
+                    scheduleAt(simTime().dbl() + PT, frame);
+                } else {
+                    // ACK
+                    frame->setFrameType(1);
+                    frame->setACKNACKNumber(seqNumber);
+                    frame->setFrameType(frame->getFrameType() + 4);
+                    scheduleAt(simTime().dbl() + PT, frame);
+                }
+
             }
         }
     }
@@ -253,13 +276,12 @@ void Node::sendNACKData(Frame *frame) {
     Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
     std::fstream &fout = logger.GetFileStream();
     if (fout.is_open()) {
-        fout << "At time[" << simTime().dbl() << "], Node["
-                << NodeName.back() << "] sent frame with seq_num=["
-                << noErrorFrame->getSeqNum() << "] and payload=["
-                << frame->getPayload() << "]" << " and trailer=["
-                << toBinary(frame->getTrailer()) << "]" << " , Modified [" << -1
-                << "]" << " , Lost [" << "No" << "]" << ", Duplicate [" << 0
-                << "], Delay [" << 0 << "]" << endl;
+        fout << "At time[" << simTime().dbl() << "], Node[" << NodeName.back()
+                << "] sent frame with seq_num=[" << noErrorFrame->getSeqNum()
+                << "] and payload=[" << frame->getPayload() << "]"
+                << " and trailer=[" << toBinary(frame->getTrailer()) << "]"
+                << " , Modified [" << -1 << "]" << " , Lost [" << "No" << "]"
+                << ", Duplicate [" << 0 << "], Delay [" << 0 << "]" << endl;
     }
 }
 
@@ -337,8 +359,8 @@ void Node::sendFrame(Frame *frame) {
         return;
     }
     if (isInNACK) {
-            scheduleAt(NACKEnding + PT, frame);
-            return;
+        scheduleAt(NACKEnding + PT, frame);
+        return;
     }
     processing = false;
     EV << "Start Sending DATA" << std::endl;
@@ -394,17 +416,16 @@ void Node::sendFrame(Frame *frame) {
                     << NodeName.back() << "] sent frame with seq_num=["
                     << frame->getSeqNum() << "] and payload=["
                     << frame->getPayload() << "]" << " and trailer=["
-                    << toBinary(frame->getTrailer()) << "]"
-                    << " , Modified [" << results[0] << "]" << " , Lost ["
-                    << results[1] << "]" << ", Duplicate ["
-                    << (int) (results[2][0] - '0') + 1 << "], Delay ["
-                    << (delay ? ED : 0) << "]" << endl;
+                    << toBinary(frame->getTrailer()) << "]" << " , Modified ["
+                    << results[0] << "]" << " , Lost [" << results[1] << "]"
+                    << ", Duplicate [" << (int) (results[2][0] - '0') + 1
+                    << "], Delay [" << (delay ? ED : 0) << "]" << endl;
         }
     }
 
     if (!loss) {
         sendDelayed(frame, TD + (delay ? ED : 0), "out");
-        if(duplication){
+        if (duplication) {
             Frame *duplicateFrame = frame->dup();
             sendDelayed(duplicateFrame, TD + DD + (delay ? ED : 0), "out");
         }
