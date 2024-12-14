@@ -175,8 +175,8 @@ void Node::sendACKNACK(Frame *frame) {
     EV << "Start Sending ACKNACK" << std::endl;
     frame->setFrameType(frame->getFrameType() - 4);
     std::string NodeName = getFullName();
-    srand(time(0));
-    double randomNum = static_cast<double>(rand()) / RAND_MAX;
+
+    volatile double randomNum = uniform(0, 1);
 
     if (frame->getFrameType() == 0) //NACK
             {
