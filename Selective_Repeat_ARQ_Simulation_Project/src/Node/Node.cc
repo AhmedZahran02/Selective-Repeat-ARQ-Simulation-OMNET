@@ -155,6 +155,7 @@ void Node::handleRecieveData(Frame *frame) {
                     no_nak = true;
                     // NACK
                     frame->setFrameType(0);
+                    frame->setACKNACKNumber(seqNumber);
                     frame->setFrameType(frame->getFrameType() + 4);
                     scheduleAt(simTime().dbl() + PT, frame);
                 } else {
@@ -225,6 +226,7 @@ void Node::handleACK(Frame *frame) {
     while (currentWindowSize
             && SeqList[startIndex]->getSeqNum() != frame->getACKNACKNumber()) {
         timeouts[startIndex] = 0;
+
         IncrementWindowIndex(startIndex);
         currentWindowSize--;
     }
@@ -253,7 +255,7 @@ void Node::handleNACK(Frame *frame) {
 
     frame->setFrameType(7);
     isInNACK = true;
-    NACKEnding = simTime().dbl() + PT;
+    NACKEnding = simTime().dbl() + PT + 0.001;
     scheduleAt(simTime().dbl() + PT + 0.001, frame);
 
     timeouts[index] = simTime().dbl() + PT + 0.001 + TO;
@@ -321,7 +323,7 @@ void Node::handleTimeout(Frame *frame) {
                     << frame->getSeqNum() << "]" << endl;
         }
         isInTimeout = true;
-        TimeoutEnding = simTime().dbl() + PT;
+        TimeoutEnding = simTime().dbl() + PT + 0.001;
         scheduleAt(simTime().dbl() + PT + 0.001, frame);
         timeouts[index] = simTime().dbl() + PT + 0.001 + TO;
     }
