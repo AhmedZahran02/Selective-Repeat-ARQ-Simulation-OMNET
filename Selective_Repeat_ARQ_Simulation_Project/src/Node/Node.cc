@@ -130,7 +130,7 @@ void Node::handleRecieveData(Frame *frame) {
         if (checkCRC(frame)) {
             std::string payload = UnApplyByteStuffing(frame);
             payloadList[(startIndex
-                    + ((frame->getSeqNum() - seqNumber + MAX_SEQ) % MAX_SEQ))
+                    + ((frame->getSeqNum() - seqNumber + (MAX_SEQ+1)) % (MAX_SEQ+1)))
                     % WindowSize] = { { payload, frame->getSeqNum() }, true };
             if (frame->getSeqNum() != seqNumber) {
                 if(!no_nak){
@@ -243,15 +243,20 @@ void Node::handleNACK(Frame *frame) {
         }
         index++;
     }
-
+    if(index==SeqList.size()){
+        EV << "Send Help" << std::endl;
+        EV << seqNum << std::endl;
+        EV << "Send Help" << std::endl;
+        return;
+    }
     frame = SeqList[index]->dup();
 
     frame->setFrameType(7);
     isInNACK = true;
     NACKEnding = simTime().dbl() + PT;
-    scheduleAt(simTime().dbl() + PT, frame);
+    scheduleAt(simTime().dbl() + PT + 0.001, frame);
 
-    timeouts[index] = simTime().dbl() + PT + TO;
+    timeouts[index] = simTime().dbl() + PT + 0.001 + TO;
 
     EV << "End NACK" << std::endl;
 }
@@ -263,7 +268,7 @@ void Node::sendNACKData(Frame *frame) {
     Frame *noErrorFrame = frame->dup();
     scheduleAt(simTime().dbl() + TO, noErrorFrame);
 
-    sendDelayed(frame, TD + 0.001, "out");
+    sendDelayed(frame, TD, "out");
 
     std::string NodeName = getFullName();
     EV << "At time[" << simTime().dbl() << "], Node[" << NodeName.back()
@@ -317,8 +322,8 @@ void Node::handleTimeout(Frame *frame) {
         }
         isInTimeout = true;
         TimeoutEnding = simTime().dbl() + PT;
-        scheduleAt(simTime().dbl() + PT, frame);
-        timeouts[index] = simTime().dbl() + PT + TO;
+        scheduleAt(simTime().dbl() + PT + 0.001, frame);
+        timeouts[index] = simTime().dbl() + PT + 0.001 + TO;
     }
     EV << "End Timeout" << std::endl;
 }
@@ -327,7 +332,7 @@ void Node::sendTimeout(Frame *frame) {
     isInTimeout = false;
     frame->setFrameType(2);
 
-    sendDelayed(frame, TD + 0.001, "out");
+    sendDelayed(frame, TD, "out");
 
     Frame *noErrorFrame = frame->dup();
     scheduleAt(simTime().dbl() + TO, noErrorFrame);
