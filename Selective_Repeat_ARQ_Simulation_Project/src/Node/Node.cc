@@ -214,7 +214,7 @@ void Node::sendACKNACK(Frame *frame) {
         }
 
         if (randomNum > LP) {
-            sendDelayed(frame, TD + PT, "out");
+            sendDelayed(frame, TD, "out");
         }
     }
     EV << "End Sending ACKNACK" << std::endl;

@@ -24,14 +24,14 @@ std::string UnApplyByteStuffing(Frame* frame){
     std::vector<char> newPayload;
     bool isFlag = true;
     for (char c : std::string(frame->getPayload())) {
-        if ((c == '/' || c == '$') && isFlag){
+        if ((c == '/') && isFlag){
             isFlag=false;
             continue;
         }
         newPayload.push_back(c);
         isFlag=true;
     }
-    std::string payload(newPayload.begin(), newPayload.end());
+    std::string payload(newPayload.begin()+1, newPayload.end()-1);
     return payload;
 }
 
