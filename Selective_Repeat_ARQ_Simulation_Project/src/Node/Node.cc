@@ -295,7 +295,7 @@ void Node::sendNACKData(Frame *frame) {
 void Node::handleTimeout(Frame *frame) {
     EV << "Start Timeout" << std::endl;
 
-    if (WindowSize == 0) {
+    if (currentWindowSize == 0) {
         return;
     }
 
