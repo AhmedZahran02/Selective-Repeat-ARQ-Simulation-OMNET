@@ -483,6 +483,7 @@ void Node::handleMessage(cMessage *msg) {
         break;
     case 7:
         sendNACKData(frame);
+        break;
     default:
         reFillTheWindow();
         break;
