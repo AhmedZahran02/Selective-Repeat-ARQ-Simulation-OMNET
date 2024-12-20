@@ -25,7 +25,7 @@ void Node::parametersInitialization() {
     endIndex = (MAX_SEQ + 1) / 2 - 1;
     currentWindowSize = 0;
     SeqList.resize(WindowSize);
-    timeouts.resize(WindowSize);
+    timeouts.resize(MAX_SEQ + 1);
     payloadList.resize(WindowSize);
     errors.resize(MAX_SEQ + 1);
     for (int i = 0; i <= MAX_SEQ; i++) {
@@ -77,6 +77,9 @@ void Node::reFillTheWindow() {
             ApplyByteStuffing(packet->message, frame);
             frame->setFrameType(2);
             ApplyCRC(frame);
+
+            Frame *noErrorFrame = frame->dup();
+            SeqList[endIndex] = noErrorFrame;
 
             frame->setFrameType(3); // send to myself
 
@@ -225,8 +228,7 @@ void Node::handleACK(Frame *frame) {
     EV << "Start ACK" << std::endl;
     while (currentWindowSize
             && SeqList[startIndex]->getSeqNum() != frame->getACKNACKNumber()) {
-        timeouts[startIndex] = 0;
-
+        timeouts[SeqList[startIndex]->getSeqNum()] = 0;
         IncrementWindowIndex(startIndex);
         currentWindowSize--;
     }
@@ -258,7 +260,7 @@ void Node::handleNACK(Frame *frame) {
     NACKEnding = simTime().dbl() + PT + 0.001;
     scheduleAt(simTime().dbl() + PT + 0.001, frame);
 
-    timeouts[index] = simTime().dbl() + PT + 0.001 + TO;
+    timeouts[frame->getSeqNum()] = simTime().dbl() + PT + 0.001 + TO;
 
     EV << "End NACK" << std::endl;
 }
@@ -294,22 +296,12 @@ void Node::sendNACKData(Frame *frame) {
 
 void Node::handleTimeout(Frame *frame) {
     EV << "Start Timeout" << std::endl;
-
+    EV << "SeqNum:" << frame->getSeqNum() << std::endl;
     if (currentWindowSize == 0) {
         return;
     }
 
-    int index = 0;
-    bool inWindow = false;
-    for (auto f : SeqList) {
-        if (f && f->getSeqNum() == frame->getSeqNum()) {
-            inWindow = true;
-            break;
-        }
-        index++;
-    }
-
-    if (inWindow && (simTime() == timeouts[index])) {
+    if (std::abs(simTime().dbl() - timeouts[frame->getSeqNum()]) < 0.0001) {
         frame->setFrameType(6); // timeout
         std::string NodeName = getFullName();
         EV << "Timeout event at [" << simTime().dbl() << "] at Node["
@@ -325,7 +317,7 @@ void Node::handleTimeout(Frame *frame) {
         isInTimeout = true;
         TimeoutEnding = simTime().dbl() + PT + 0.001;
         scheduleAt(simTime().dbl() + PT + 0.001, frame);
-        timeouts[index] = simTime().dbl() + PT + 0.001 + TO;
+        timeouts[frame->getSeqNum()] = simTime().dbl() + PT + 0.001 + TO;
     }
     EV << "End Timeout" << std::endl;
 }
@@ -373,7 +365,6 @@ void Node::sendFrame(Frame *frame) {
     EV << "Start Sending DATA" << std::endl;
     frame->setFrameType(2);
     Frame *noErrorFrame = frame->dup();
-    SeqList[endIndex] = noErrorFrame;
 
     std::string NodeName = getFullName();
     Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
@@ -439,7 +430,7 @@ void Node::sendFrame(Frame *frame) {
     }
 
     scheduleAt(simTime().dbl() + TO, noErrorFrame);
-    timeouts[endIndex] = simTime().dbl() + TO;
+    timeouts[frame->getSeqNum()] = simTime().dbl() + TO;
     IncrementWindowIndex(endIndex);
     reFillTheWindow();
     EV << "End Sending DATA" << std::endl;
