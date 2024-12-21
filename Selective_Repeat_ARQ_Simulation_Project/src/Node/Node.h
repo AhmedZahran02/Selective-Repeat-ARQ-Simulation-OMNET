@@ -63,6 +63,8 @@ private:
     void sendFrame(Frame *frame);
     void sendTimeout(Frame *frame);
 
+    void handleDuplicatePrinting(Frame* frame);
+
     void IncrementSeqNum(int& seqNum);
     void IncrementWindowIndex(int &index);
 

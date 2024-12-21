@@ -398,27 +398,22 @@ void Node::sendFrame(Frame *frame) {
     }
 
     if (duplication) {
-        EV << "At time[" << simTime().dbl() + DD << "], Node["
-                  << NodeName.back() << "] sent frame with seq_num=["
-                  << frame->getSeqNum() << "] and payload=["
-                  << frame->getPayload() << "]" << " and trailer=["
-                  << toBinary(frame->getTrailer()) << "]" << " , Modified ["
-                  << results[0] << "]" << " , Lost [" << results[1] << "]"
-                  << ", Duplicate [" << (int) (results[2][0] - '0') + 1
-                  << "], Delay [" << (delay ? ED : 0) << "]" << endl;
+        std::ostringstream oss;
+        oss << "At time[" << simTime().dbl() + DD << "], Node["
+                            << NodeName.back() << "] [sent] frame with seq_num=["
+                            << frame->getSeqNum() << "] and payload=["
+                            << frame->getPayload() << "]" << " and trailer=["
+                            << toBinary(frame->getTrailer()) << "]" << " , Modified ["
+                            << results[0] << "]" << " , Lost [" << results[1] << "]"
+                            << ", Duplicate [" << (int) (results[2][0] - '0') + 1
+                            << "], Delay [" << (delay ? ED : 0) << "]";
 
-        Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
-        std::fstream &fout = logger.GetFileStream();
-        if (fout.is_open()) {
-            fout << "At time[" << simTime().dbl() + DD << "], Node["
-                    << NodeName.back() << "] sent frame with seq_num=["
-                    << frame->getSeqNum() << "] and payload=["
-                    << frame->getPayload() << "]" << " and trailer=["
-                    << toBinary(frame->getTrailer()) << "]" << " , Modified ["
-                    << results[0] << "]" << " , Lost [" << results[1] << "]"
-                    << ", Duplicate [" << (int) (results[2][0] - '0') + 1
-                    << "], Delay [" << (delay ? ED : 0) << "]" << endl;
-        }
+        std::string message = oss.str();
+
+        Frame* duplicateFrame = new Frame();
+        duplicateFrame->setPayload(message.c_str());
+        duplicateFrame->setFrameType(8);
+        scheduleAt(simTime().dbl() + DD, duplicateFrame);
     }
 
     if (!loss) {
@@ -434,6 +429,14 @@ void Node::sendFrame(Frame *frame) {
     IncrementWindowIndex(endIndex);
     reFillTheWindow();
     EV << "End Sending DATA" << std::endl;
+}
+
+void Node::handleDuplicatePrinting(Frame* frame){
+    std::string message(frame->getPayload());
+    EV << message << std::endl;
+    Logger &logger = Logger::getInstance(OUTPUTFILEPATH);
+    std::fstream &fout = logger.GetFileStream();
+    fout << message << endl;
 }
 
 void Node::handleMessage(cMessage *msg) {
@@ -474,6 +477,9 @@ void Node::handleMessage(cMessage *msg) {
         break;
     case 7:
         sendNACKData(frame);
+        break;
+    case 8:
+        handleDuplicatePrinting(frame);
         break;
     default:
         reFillTheWindow();
