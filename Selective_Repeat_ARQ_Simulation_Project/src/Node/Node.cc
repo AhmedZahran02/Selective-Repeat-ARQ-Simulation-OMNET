@@ -153,6 +153,8 @@ void Node::handleRecieveData(Frame *frame) {
             }
             MoveRecieverWindow(frame);
         } else {
+            // she said stay silent but the document said send in order (idk what to do anymore)
+            /*
             if (frame->getSeqNum() == seqNumber) {
                 if (!no_nak) {
                     no_nak = true;
@@ -170,6 +172,7 @@ void Node::handleRecieveData(Frame *frame) {
                 }
 
             }
+            */
         }
     }
     EV << "End Handle rec" << std::endl;
