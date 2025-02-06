@@ -90,5 +90,5 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 This project is licensed under the MIT License.
 
 ## Contact
-For questions or suggestions, please contact Ahmed Zahran at [aozaoz2017@gmail.com].
+Feel free to reach out to the repository owner or open an issue if you have any questions or suggestions. Happy coding! 🚀
 
